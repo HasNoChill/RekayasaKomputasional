@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import sympy as sp
 import pandas as pd
 
 st.set_page_config(page_title="Metode Numerik", layout="centered")
@@ -11,9 +10,13 @@ method = st.selectbox("Pilih metode:", ["Bagi Dua", "Regula Falsi", "Iterasi Tit
 
 # Input fungsi dari user
 f_str = st.text_input("Masukkan fungsi f(x):", "x**2 - 4")
-x = sp.symbols('x')
-f = sp.sympify(f_str)
-f_lambd = sp.lambdify(x, f, modules=['numpy'])
+
+# Fungsi aman menggunakan eval
+def f_lambd(x):
+    try:
+        return eval(f_str, {"x": x, "np": np, "__builtins__": {}})
+    except:
+        return np.nan
 
 # Parameter umum
 x0 = st.number_input("Nilai awal x0 / a:", value=1.0)
@@ -52,27 +55,32 @@ if st.button("Hitung"):
                 a = x2
 
     elif method == "Iterasi Titik Tetap":
-        g_str = st.text_input("Masukkan fungsi g(x) untuk titik tetap:", "np.sqrt(4)")
-        g = eval("lambda x: " + g_str)
+        g_str = st.text_input("Masukkan fungsi g(x) untuk titik tetap:", "(x + 4/x)/2")
+        g = lambda x: eval(g_str, {"x": x, "np": np, "__builtins__": {}})
         x_curr = x0
         for i in range(int(max_iter)):
-            x_next = g(x_curr)
-            err = abs(x_next - x_curr)
-            hasil.append((i+1, x_next, err))
-            if err < tol:
+            try:
+                x_next = g(x_curr)
+                err = abs(x_next - x_curr)
+                hasil.append((i+1, x_next, err))
+                if err < tol:
+                    break
+                x_curr = x_next
+            except:
+                st.error("Error saat evaluasi fungsi g(x)")
                 break
-            x_curr = x_next
 
     elif method == "Newton-Raphson":
-        df = sp.diff(f, x)
-        df_lambd = sp.lambdify(x, df, modules=['numpy'])
+        dfdx_str = st.text_input("Masukkan turunan f(x):", "2*x")
+        f_prime = lambda x: eval(dfdx_str, {"x": x, "np": np, "__builtins__": {}})
         x_curr = x0
         for i in range(int(max_iter)):
-            dfx = df_lambd(x_curr)
+            fx = f_lambd(x_curr)
+            dfx = f_prime(x_curr)
             if dfx == 0:
                 st.error("Turunan nol, metode gagal.")
                 break
-            x_next = x_curr - f_lambd(x_curr)/dfx
+            x_next = x_curr - fx/dfx
             err = abs(x_next - x_curr)
             hasil.append((i+1, x_next, err))
             if err < tol:
