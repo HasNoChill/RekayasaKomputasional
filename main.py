@@ -6,22 +6,18 @@ import pandas as pd
 st.set_page_config(page_title="Metode Numerik", layout="centered")
 st.title("Perhitungan Metode Numerik")
 
-# Pilih metode
 method = st.selectbox("Pilih metode:", ["Bagi Dua", "Regula Falsi", "Iterasi Titik Tetap", "Newton-Raphson", "Secant"])
 
-# Input fungsi dari user
 f_str = st.text_input("Masukkan fungsi f(x):", "x**2 - 4")
 x = sp.symbols('x')
 f = sp.sympify(f_str)
 f_lambd = sp.lambdify(x, f, modules=['numpy'])
 
-# Parameter umum
 x0 = st.number_input("Nilai awal x0 / a:", value=1.0)
 x1 = st.number_input("Nilai awal x1 / b:", value=3.0)
 tol = st.number_input("Toleransi error:", value=0.0001, format="%f")
 max_iter = st.number_input("Maksimum iterasi:", value=50, step=1)
 
-# Jalankan metode
 if st.button("Hitung"):
     hasil = []
     if method == "Bagi Dua":
@@ -93,7 +89,6 @@ if st.button("Hitung"):
                 break
             x_prev, x_curr = x_curr, x_next
 
-    # Tampilkan hasil dalam bentuk tabel
     st.subheader("Hasil Iterasi")
     if method in ["Bagi Dua", "Regula Falsi"]:
         df = pd.DataFrame(hasil, columns=["Iterasi", "x", "f(x)"])
